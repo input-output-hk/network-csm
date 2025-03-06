@@ -11,3 +11,8 @@ tokio = { version = "1", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = "0.3"
 anyhow = "1"
+thiserror = "2.0.12"
+cfg-if = "1.0.0"
+reqwest-websocket = "0.4.4"
+reqwest = "0.12.12"
+futures = "0.3.31"
