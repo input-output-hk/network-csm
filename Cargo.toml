@@ -1,0 +1,6 @@
+[workspace]
+resolver = "2"
+members = [
+    "network-csm", "network-csm-cardano-protocols", "network-csm-macro",
+    "network-csm-test", "network-csm-tokio", "network-csm-example", "network-cardano", "network-csm-cardano-ws-proxy",
+]

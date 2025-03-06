@@ -1,0 +1,13 @@
+[package]
+name = "network-csm-test"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+network-csm = { path = "../network-csm" }
+network-csm-tokio = { path = "../network-csm-tokio" }
+network-csm-cardano-protocols = { path = "../network-csm-cardano-protocols" }
+tokio = { version = "1", features = ["full"] }
+tracing = "0.1"
+tracing-subscriber = "0.3"
+anyhow = "1"

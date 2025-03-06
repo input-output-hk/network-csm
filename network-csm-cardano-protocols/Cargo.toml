@@ -1,0 +1,12 @@
+[package]
+name = "network-csm-cardano-protocols"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+cbored = { version = "0.4" }
+cbored-derive = { version = "^0.4.1" }
+
+network-csm = { path = "../network-csm", version = "0.1" }
+network-csm-macro = { path = "../network-csm-macro", version = "0.1" }
+anyhow = "1"
