@@ -107,11 +107,15 @@ pub struct AsyncChannel<P: Protocol> {
     pub(crate) protocol: P,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, thiserror::Error, Debug)]
 pub enum MessageError<P: Protocol> {
-    InvalidContent(ReadMessageError),
+    #[error("Invalid content")]
+    InvalidContent(#[source] ReadMessageError),
+    #[error("Invalid state")]
     InvalidState { current: P, msg: P::Message },
+    #[error("Stream terminated")]
     StreamTerminated,
+    #[error("Internal error")]
     InternalError,
 }
 

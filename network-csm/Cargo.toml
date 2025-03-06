@@ -7,3 +7,4 @@ description = "Network CBOR Simple Muxer"
 [dependencies]
 cbored = { version = "^0.4.2", features = ["derive"] }
 tracing = "0.1"
+thiserror = "2.0"

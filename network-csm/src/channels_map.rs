@@ -12,7 +12,8 @@ pub struct ChannelsMapBuilder<T> {
     map: HashMap<Id, T>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, thiserror::Error)]
+#[error("Duplicated channel {0:?}")]
 pub struct DuplicateChannel(pub Id);
 
 impl<T> ChannelsMapBuilder<T> {
