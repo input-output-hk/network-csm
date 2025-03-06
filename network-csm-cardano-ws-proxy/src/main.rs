@@ -101,6 +101,8 @@ async fn handle_socket(socket: WebSocket, ps: ProxyState) {
             let span = tracing::info_span!("Connected", %addr);
             let _span = span.enter();
 
+            tracing::debug!("Connected");
+
             let (tcp_receiver, tcp_writer) = stream.into_split();
             let disconnected = Arc::new(AtomicBool::new(false));
 
@@ -126,7 +128,10 @@ async fn handle_socket(socket: WebSocket, ps: ProxyState) {
 
 #[tracing::instrument(skip(reader))]
 async fn read(mut reader: Reader) {
+    tracing::debug!("Waiting to receive messages.");
+
     'outer: while let Some(msg) = reader.receiver.next().await {
+        tracing::debug!(?msg, "message received");
         let msg = match msg {
             Ok(msg) => msg,
             Err(error) => {
@@ -161,6 +166,8 @@ async fn read(mut reader: Reader) {
         }
     }
 
+    tracing::warn!("WebSocket disconnected");
+
     reader
         .disconnected
         .store(true, std::sync::atomic::Ordering::Release);
@@ -169,7 +176,7 @@ async fn read(mut reader: Reader) {
 #[tracing::instrument(skip(writer))]
 async fn write(mut writer: Writer) {
     'outer: while writer.receiver.readable().await.is_ok()
-        && writer
+        && !writer
             .disconnected
             .load(std::sync::atomic::Ordering::Acquire)
     {
@@ -202,6 +209,8 @@ async fn write(mut writer: Writer) {
             data = &data[size..];
         }
     }
+
+    tracing::warn!("Cardano Node disconnected");
 
     writer
         .disconnected
