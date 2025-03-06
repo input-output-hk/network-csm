@@ -52,7 +52,7 @@ async fn main() -> Result<()> {
         .context("Failed to initialise the tracing subscriber")?;
 
     let app = Router::new()
-        .route("/ws", any(handler))
+        .route("/", any(handler))
         .layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()))
         .with_state(ps);
 
