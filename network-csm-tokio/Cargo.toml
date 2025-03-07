@@ -11,5 +11,8 @@ tracing-subscriber = "0.3"
 cbored = { version = "0.4" }
 thiserror = "2.0.12"
 
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen-futures = "0.4.50"
+
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 hickory-resolver = "0.24"

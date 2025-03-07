@@ -9,9 +9,17 @@ use tokio::{
 pub struct Handle {
     pub channels: ChannelsMap<OnDirection<AsyncRawChannel>>,
     #[allow(unused)]
+    #[cfg(not(target_arch = "wasm32"))]
     mux_task: tokio::task::JoinHandle<()>,
     #[allow(unused)]
+    #[cfg(target_arch = "wasm32")]
+    mux_task: (),
+    #[allow(unused)]
+    #[cfg(not(target_arch = "wasm32"))]
     demux_task: tokio::task::JoinHandle<Result<(), DemuxError>>,
+    #[allow(unused)]
+    #[cfg(target_arch = "wasm32")]
+    demux_task: (),
     bytes_read: Arc<AtomicU64>,
     bytes_written: Arc<AtomicU64>,
 }
@@ -200,14 +208,34 @@ impl Handle {
         let mux_notify = channels.mux_notify.clone();
         let channels = channels.finalize();
 
+        #[cfg(not(target_arch = "wasm32"))]
         let mux_task = {
             let channels = channels.clone();
             tokio::spawn(async { muxer_task(write_stream, mux_notify, mux, channels).await })
         };
+        #[cfg(target_arch = "wasm32")]
+        let mux_task = {
+            let channels = channels.clone();
+            wasm_bindgen_futures::spawn_local(async {
+                muxer_task(write_stream, mux_notify, mux, channels).await
+            })
+        };
+
+        #[cfg(not(target_arch = "wasm32"))]
         let demux_task = {
             let demux_notify = demux_notify.clone();
             let channels = channels.clone();
             tokio::spawn(async { demuxer_task(read_stream, demux_notify, demux, channels).await })
+        };
+        #[cfg(target_arch = "wasm32")]
+        let demux_task = {
+            let demux_notify = demux_notify.clone();
+            let channels = channels.clone();
+            wasm_bindgen_futures::spawn_local(async {
+                demuxer_task(read_stream, demux_notify, demux, channels)
+                    .await
+                    .unwrap()
+            })
         };
 
         Handle {
