@@ -12,7 +12,7 @@ pub struct CommandArguments {
     pub ws_listen_port: SocketAddr,
 
     /// set the env filter
-    #[arg(long = "log-level", default_value = "debug")]
+    #[arg(long = "log-level", default_value = "info")]
     pub log_level: LevelFilter,
 
     /// Cardano network bootstrap nodes

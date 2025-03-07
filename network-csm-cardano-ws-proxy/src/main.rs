@@ -28,6 +28,7 @@ use tokio::{
 use tower::ServiceBuilder;
 use tower_http::trace::TraceLayer;
 use tracing_futures::Instrument;
+use tracing_subscriber::{layer::SubscriberExt as _, util::SubscriberInitExt as _};
 
 #[derive(Clone)]
 struct ProxyState {
@@ -44,12 +45,14 @@ async fn main() -> Result<()> {
         bootstrap_port: Arc::new(command_arguments.bootstrap_port),
     };
 
-    tracing_subscriber::fmt()
-        .pretty()
-        .with_max_level(command_arguments.log_level)
-        .try_init()
-        .map_err(|error| anyhow!("{error:?}"))
-        .context("Failed to initialise the tracing subscriber")?;
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::builder()
+                .with_default_directive(command_arguments.log_level.into())
+                .parse_lossy("hickory_proto=warn,network_csm_cardano_ws_proxy=debug"),
+        )
+        .with(tracing_subscriber::fmt::layer().pretty())
+        .init();
 
     let app = Router::new()
         .route("/", any(handler))
