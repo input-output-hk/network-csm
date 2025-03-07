@@ -3,6 +3,8 @@ use network_csm_cardano_protocols::chainsync_n2n::{self, Point, Points};
 use network_csm_tokio::{AsyncChannel, MessageError};
 use tracing_futures::Instrument;
 
+pub use chainsync_n2n::Tip;
+
 pub enum ChainSyncClient {
     N2N(AsyncChannel<chainsync_n2n::State>),
     N2C(AsyncChannel<chainsync_n2c::State>),
@@ -45,9 +47,7 @@ impl ChainSyncClient {
     }
 
     #[tracing::instrument(skip(self), err)]
-    pub async fn get_tip(
-        &mut self,
-    ) -> Result<chainsync_n2n::Tip, MessageError<chainsync_n2n::State>> {
+    pub async fn get_tip(&mut self) -> Result<Tip, MessageError<chainsync_n2n::State>> {
         let msg = chainsync_n2n::Message::FindIntersect(Points(vec![Point::Origin]));
         self.write_one(msg).in_current_span().await;
         match self

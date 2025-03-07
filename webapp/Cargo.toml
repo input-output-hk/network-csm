@@ -1,0 +1,30 @@
+[package]
+name = "ce-cardano-network-webapp"
+version = "0.1.0"
+edition = "2024"
+authors = ["Nicolas Di Prima <nicolas.diprima@iohk.io>"]
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/input-output-hk/ce-cardano-network-webapp"
+homepage = "https://input-output-hk.github.io/ce-cardano-network-webapp"
+keywords = ["web", "webasm", "cardano", "dApp", "CIP-30"]
+categories = ["gui", "wasm", "web-programming"]
+description = "A webapp to showcase connecting to the cardano network from WASM and directly in the browser."
+readme = "README.md"
+rust-version = "1.85"
+
+[dependencies]
+# this is the development version of Yew
+yew = { git = "https://github.com/yewstack/yew/", features = ["csr"] }
+web-sys = "0.3.77"
+gloo = "0.11.0"
+getrandom = { version = "0.3", features = ["wasm_js"] }
+wasm-logger = "0.2.0"
+# tracing-web = "0.1.3"
+# tracing-subscriber = { version = "0.3.19", features = ["time"] }
+wasm-bindgen = "0.2.100"
+wasm-bindgen-futures = "0.4.50"
+hex = "0.4.3"
+cbored = "0.4.2"
+time = { version = "0.3", features = ["wasm-bindgen"] }
+
+network-cardano = { path = "../network-cardano" }
