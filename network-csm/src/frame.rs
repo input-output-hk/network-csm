@@ -11,8 +11,19 @@ const ID_MASK: u16 = 0x7f_ff;
 pub struct Time(pub u32);
 
 impl Time {
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn now() -> Self {
-        Time(std::time::Instant::now().elapsed().as_micros() as u32)
+        Time(
+            std::time::SystemTime::now()
+                .duration_since(std::time::SystemTime::UNIX_EPOCH)
+                .unwrap()
+                .as_micros() as u32,
+        )
+    }
+
+    #[cfg(target_arch = "wasm32")]
+    pub fn now() -> Self {
+        Time(0)
     }
 }
 
