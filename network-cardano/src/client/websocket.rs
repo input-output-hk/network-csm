@@ -12,6 +12,8 @@ struct WebSocket {
     inner: reqwest_websocket::WebSocket,
 }
 
+unsafe impl Send for WebSocket {}
+
 #[derive(Debug, Error)]
 pub enum WsConnectError {
     #[error("Failed to connect to the given websocket path")]
