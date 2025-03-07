@@ -37,7 +37,7 @@ impl ClientBuilder {
         self.channels.add_initiator().map(ChainSyncClient::new_n2n)
     }
 
-    pub fn build<R, W>(self, read_stream: R, write_stream: W) -> Client
+    pub(crate) fn build<R, W>(self, read_stream: R, write_stream: W) -> Client
     where
         R: AsyncRead + Unpin + Send + 'static,
         W: AsyncWrite + Unpin + Send + 'static,
