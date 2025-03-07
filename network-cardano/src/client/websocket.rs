@@ -109,7 +109,7 @@ impl AsyncWrite for WebSocket {
             )));
         }
 
-        std::task::Poll::Ready(Ok(buf.len()))
+        std::pin::pin!(this).poll_flush(cx).map_ok(|()| buf.len())
     }
 
     fn poll_flush(

@@ -16,7 +16,10 @@ pub struct CommandArguments {
     pub log_level: LevelFilter,
 
     /// Cardano network bootstrap nodes
-    #[arg(long = "bootstrap-node", default_value = "backbone.cardano.iog.io")]
+    #[arg(
+        long = "bootstrap-node",
+        default_value = "backbone.mainnet.cardanofoundation.org."
+    )]
     pub bootstrap_node: String,
 
     /// Cardano network bootstrap port number

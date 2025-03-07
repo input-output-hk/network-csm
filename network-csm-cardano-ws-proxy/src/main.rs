@@ -17,6 +17,7 @@ use futures::{
 };
 use network_csm::Demux;
 use std::{
+    io::ErrorKind,
     net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
     str::FromStr as _,
     sync::{Arc, atomic::AtomicBool},
@@ -186,6 +187,9 @@ async fn write(mut writer: Writer) {
         let mut buff = [0; 16384];
         let mut data = match writer.receiver.try_read(&mut buff) {
             Ok(size) => &buff[..size],
+            Err(error) if error.kind() == ErrorKind::WouldBlock => {
+                continue;
+            }
             Err(error) => {
                 tracing::error!(%error, "Failed to receive data from TCP connection");
                 break;
