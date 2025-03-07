@@ -1,16 +1,10 @@
+use crate::channel::{AsyncRawChannel, HandleChannels, Sending};
 use network_csm::{ChannelsMap, Demux, DemuxResult, Direction, HEADER_SIZE, Id, Mux, OnDirection};
-use std::{
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
-    str::FromStr,
-    sync::{Arc, atomic::AtomicU64},
-};
+use std::sync::{Arc, atomic::AtomicU64};
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWrite, AsyncWriteExt},
     sync::Notify,
 };
-use tracing::{debug, info};
-
-use crate::channel::{AsyncRawChannel, HandleChannels, Sending};
 
 pub struct Handle {
     pub channels: ChannelsMap<OnDirection<AsyncRawChannel>>,
@@ -235,6 +229,11 @@ mod extra {
         TokioAsyncResolver,
         config::{ResolverConfig, ResolverOpts},
     };
+    use std::{
+        net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+        str::FromStr,
+    };
+    use tracing::{debug, info};
 
     impl Handle {
         #[cfg(not(target_os = "windows"))]
