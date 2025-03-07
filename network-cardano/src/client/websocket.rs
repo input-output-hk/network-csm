@@ -47,6 +47,7 @@ impl AsyncRead for WebSocket {
 
         let res = unsafe { self.map_unchecked_mut(|ws| &mut ws.inner).poll_next(cx) };
         let Some(msg) = ready!(res) else {
+            cx.waker().wake_by_ref();
             return std::task::Poll::Ready(Err(std::io::Error::new(
                 std::io::ErrorKind::ConnectionAborted,
                 "Disconnected",
@@ -55,6 +56,7 @@ impl AsyncRead for WebSocket {
 
         let msg = match msg {
             Err(error) => {
+                cx.waker().wake_by_ref();
                 return std::task::Poll::Ready(Err(std::io::Error::new(
                     std::io::ErrorKind::InvalidData,
                     error,
@@ -90,6 +92,7 @@ impl AsyncWrite for WebSocket {
         let inner = std::pin::pin!(&mut this.inner);
         let res = inner.poll_ready(cx);
         if let Err(error) = ready!(res) {
+            cx.waker().wake_by_ref();
             return std::task::Poll::Ready(Err(std::io::Error::new(
                 std::io::ErrorKind::ConnectionAborted,
                 error,
@@ -99,6 +102,7 @@ impl AsyncWrite for WebSocket {
         let msg = reqwest_websocket::Message::Binary(buf.to_vec());
         let inner = std::pin::pin!(&mut this.inner);
         if let Err(error) = inner.start_send(msg) {
+            cx.waker().wake_by_ref();
             return std::task::Poll::Ready(Err(std::io::Error::new(
                 std::io::ErrorKind::ConnectionAborted,
                 error,
