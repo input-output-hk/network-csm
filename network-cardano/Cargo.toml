@@ -7,7 +7,7 @@ edition = "2024"
 network-csm = { path = "../network-csm" }
 network-csm-tokio = { path = "../network-csm-tokio" }
 network-csm-cardano-protocols = { path = "../network-csm-cardano-protocols" }
-tokio = { version = "1", features = ["full"] }
+tokio = { version = "1", features = ["io-util"] }
 tracing = "0.1"
 tracing-futures = "0.2"
 anyhow = "1"
@@ -17,6 +17,10 @@ reqwest-websocket = "0.4.4"
 reqwest = "0.12.12"
 futures = "0.3.31"
 
+# [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+# tokio = { version = "1", features = [""] }
+
 [dev-dependencies]
-clap = { version = "4.5.31", features = ["derive", "env"] }
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+tokio = { version = "1", features = ["full"] }
+clap = { version = "4.5.31", features = ["derive", "env"] }
