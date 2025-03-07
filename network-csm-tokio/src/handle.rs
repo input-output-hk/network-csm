@@ -111,9 +111,11 @@ async fn muxer_task<S: AsyncWrite + Unpin>(
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, thiserror::Error)]
 pub enum DemuxError {
-    IoError(Arc<std::io::Error>),
+    #[error("I/O Error")]
+    IoError(#[source] Arc<std::io::Error>),
+    #[error("Invalid channel {0:?} {1:?}")]
     InvalidChannel(Id, Direction),
 }
 
