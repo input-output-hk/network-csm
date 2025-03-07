@@ -1,4 +1,7 @@
-use crate::client::common::{Client, ClientBuilder};
+use crate::client::{
+    ConnectionError,
+    common::{Client, ClientBuilder},
+};
 use std::path::Path;
 use tokio::net::UnixStream;
 
@@ -11,10 +14,10 @@ impl ClientBuilder {
     /// * [`chainsync_n2c`]
     /// * [`local_tx_submission`]
     ///
-    pub async fn unix_connect(self, path: impl AsRef<Path>) -> Result<Client, tokio::io::Error> {
-        let stream = UnixStream::connect(path).await.unwrap();
+    pub async fn unix_connect(self, path: impl AsRef<Path>) -> Result<Client, ConnectionError> {
+        let stream = UnixStream::connect(path).await?;
         let (r, w) = stream.into_split();
 
-        Ok(Self::build(self, r, w))
+        Self::build(self, r, w).await
     }
 }

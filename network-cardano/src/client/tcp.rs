@@ -1,4 +1,7 @@
-use crate::client::common::{Client, ClientBuilder};
+use crate::client::{
+    ConnectionError,
+    common::{Client, ClientBuilder},
+};
 use std::net::SocketAddr;
 use tokio::net::TcpStream;
 
@@ -14,11 +17,11 @@ impl ClientBuilder {
     /// * [`peersharing`]
     /// * [`tx_submission`]
     ///
-    pub async fn tcp_connect(self, address: SocketAddr) -> Result<Client, tokio::io::Error> {
-        let stream = TcpStream::connect(address).await.unwrap();
+    pub async fn tcp_connect(self, address: SocketAddr) -> Result<Client, ConnectionError> {
+        let stream = TcpStream::connect(address).await?;
 
         let (r, w) = stream.into_split();
 
-        Ok(Self::build(self, r, w))
+        Self::build(self, r, w).await
     }
 }

@@ -1,4 +1,7 @@
-use crate::client::common::{Client, ClientBuilder};
+use crate::client::{
+    ConnectionError,
+    common::{Client, ClientBuilder},
+};
 use futures::Sink;
 use reqwest_websocket::RequestBuilderExt as _;
 use std::{pin::Pin, task::ready};
@@ -18,7 +21,7 @@ pub enum WsConnectError {
 impl ClientBuilder {
     /// connect to the given websocket
     ///
-    pub async fn ws_connect(self, path: String) -> Result<Client, WsConnectError> {
+    pub async fn ws_connect(self, path: String) -> Result<Client, ConnectionError> {
         let response = reqwest::Client::default()
             .get(path)
             .upgrade() // Prepares the WebSocket upgrade.
@@ -33,7 +36,7 @@ impl ClientBuilder {
         // let stream = UnixStream::connect(path).await.unwrap();
         let (r, w) = tokio::io::split(websocket);
 
-        Ok(Self::build(self, r, w))
+        Self::build(self, r, w).await
     }
 }
 

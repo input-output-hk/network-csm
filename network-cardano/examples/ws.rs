@@ -18,12 +18,10 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let mut builder = ClientBuilder::new();
-    let mut handshake = builder.with_n2n_handshake()?;
     let mut chainsync = builder.with_n2n_chainsync()?;
 
     let _client = builder.ws_connect(url).await?;
 
-    handshake.handshake().await?;
     let tip = chainsync.get_tip().await?;
 
     println!("{tip:?}");
