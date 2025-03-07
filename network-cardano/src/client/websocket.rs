@@ -78,9 +78,15 @@ impl AsyncRead for WebSocket {
             }
 
             reqwest_websocket::Message::Text(..) => todo!(),
-            reqwest_websocket::Message::Ping(..) => todo!(),
-            reqwest_websocket::Message::Pong(..) => todo!(),
             reqwest_websocket::Message::Close { .. } => todo!(),
+
+            #[cfg(target_arch = "wasm32")]
+            _ => todo!(),
+
+            #[cfg(not(target_arch = "wasm32"))]
+            reqwest_websocket::Message::Ping(..) => todo!(),
+            #[cfg(not(target_arch = "wasm32"))]
+            reqwest_websocket::Message::Pong(..) => todo!(),
         }
     }
 }
