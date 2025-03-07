@@ -124,14 +124,14 @@ async fn handle_socket(socket: WebSocket, ps: ProxyState) {
                 disconnected,
             };
 
-            tokio::spawn(write(writer).in_current_span());
-            tokio::spawn(read(reader).in_current_span());
+            tokio::spawn(cardano_to_ws(writer).in_current_span());
+            tokio::spawn(ws_to_cardano(reader).in_current_span());
         }
     }
 }
 
 #[tracing::instrument(skip(reader))]
-async fn read(mut reader: Reader) {
+async fn ws_to_cardano(mut reader: Reader) {
     tracing::debug!("Waiting to receive messages.");
 
     'outer: while let Some(msg) = reader.receiver.next().await {
@@ -178,7 +178,7 @@ async fn read(mut reader: Reader) {
 }
 
 #[tracing::instrument(skip(writer))]
-async fn write(mut writer: Writer) {
+async fn cardano_to_ws(mut writer: Writer) {
     'outer: while writer.receiver.readable().await.is_ok()
         && !writer
             .disconnected

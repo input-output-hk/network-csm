@@ -1,5 +1,4 @@
 use ce_cardano_network_webapp::CardanoNetwork;
-use gloo::console;
 use yew::prelude::*;
 
 #[function_component]

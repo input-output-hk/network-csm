@@ -13,6 +13,14 @@ TBD
 To run use the template you will need to use [`Trunk`]. See [`Trunk`]
 website for installation on your platform.
 
+First you need to run the local WebSocket proxy:
+
+```
+cargo run --bin network-csm-cardano-ws-proxy
+```
+
+Then you can run the handy script:
+
 ```
 ./run.sh
 ```
