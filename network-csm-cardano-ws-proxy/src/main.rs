@@ -135,6 +135,13 @@ async fn ws_to_cardano(mut reader: Reader) {
     tracing::debug!("Waiting to receive messages.");
 
     'outer: while let Some(msg) = reader.receiver.next().await {
+        if reader
+            .disconnected
+            .load(std::sync::atomic::Ordering::Acquire)
+        {
+            break;
+        }
+
         tracing::debug!(?msg, "message received");
         let msg = match msg {
             Ok(msg) => msg,
