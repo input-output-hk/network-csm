@@ -61,7 +61,7 @@ impl DemuxState {
         if data.is_empty() {
             return (0, DemuxResult::Continue);
         }
-        tracing::info!("demux data={} current-state={:?}", data.len(), self);
+        tracing::debug!("demux data={} current-state={:?}", data.len(), self);
         match self {
             DemuxState::Header(buf, current_state) => {
                 let current = *current_state as usize;
@@ -86,7 +86,7 @@ impl DemuxState {
                 }
             }
             DemuxState::Content(header, rem) => {
-                // is it enough to finish the content ?
+                // check if it is enough to finish the content
                 let finished = rem.get() <= data.len();
 
                 let header = header.clone();

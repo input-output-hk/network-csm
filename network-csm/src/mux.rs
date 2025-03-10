@@ -22,7 +22,7 @@ impl Mux {
     }
 
     pub fn egress<'a>(&mut self, id: Id, direction: Direction, data: &'a [u8]) -> Result<(), ()> {
-        tracing::info!(
+        tracing::debug!(
             "egress id={:?} direction={:?} data={}",
             id,
             direction,
