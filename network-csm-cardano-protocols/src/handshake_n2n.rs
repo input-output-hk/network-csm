@@ -203,6 +203,10 @@ impl cbored::Decode for PeerSharing {
 #[cborrepr(structure = "flat")]
 pub struct Magic(pub u64);
 
+impl Magic {
+    pub const CARDANO_MAINNET: Self = Magic(764824073);
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 #[repr(u64)]
 pub enum Version {

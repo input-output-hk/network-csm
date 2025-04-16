@@ -3,10 +3,9 @@ use network_csm_tokio::{AsyncChannel, MessageError};
 use thiserror::Error;
 use tracing_futures::Instrument;
 
-pub enum HandshakeClient {
-    N2N(AsyncChannel<handshake_n2n::State>),
-    N2C(AsyncChannel<handshake_n2c::State>),
-}
+pub struct HandshakeN2NClient(AsyncChannel<handshake_n2n::State>);
+
+pub struct HandshakeN2CClient(AsyncChannel<handshake_n2c::State>);
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -21,47 +20,58 @@ pub enum Error {
     N2CConnectionRefused(handshake_n2c::RefuseReason),
 }
 
-impl HandshakeClient {
-    pub fn new_n2n(channel: AsyncChannel<handshake_n2n::State>) -> Self {
-        Self::N2N(channel)
-    }
-
-    pub fn new_n2c(channel: AsyncChannel<handshake_n2c::State>) -> Self {
-        Self::N2C(channel)
+impl HandshakeN2NClient {
+    pub fn new(channel: AsyncChannel<handshake_n2n::State>) -> Self {
+        Self(channel)
     }
 
     #[tracing::instrument(skip(self), err)]
-    pub async fn handshake(&mut self) -> Result<(), Error> {
+    pub async fn handshake(
+        &mut self,
+        version: handshake_n2n::Version,
+        magic: handshake_n2n::Magic,
+        diffusion: handshake_n2n::DiffusionMode,
+        peer_sharing: handshake_n2n::PeerSharing,
+    ) -> Result<(), Error> {
         tracing::trace!("initialising handshake");
 
-        match self {
-            Self::N2N(n2n) => {
-                handshake_n2n(
-                    n2n,
-                    handshake_n2n::Version::V14,
-                    handshake_n2n::HandshakeNodeData {
-                        magic: handshake_n2n::Magic(764824073),
-                        diffusion: handshake_n2n::DiffusionMode::InitiatorOnly,
-                        peer_sharing: handshake_n2n::PeerSharing::Enabled,
-                        query: false,
-                    },
-                )
-                .in_current_span()
-                .await
-            }
-            Self::N2C(n2c) => {
-                handshake_n2c(
-                    n2c,
-                    handshake_n2c::Version::V16,
-                    handshake_n2c::HandshakeNodeData {
-                        magic: handshake_n2c::Magic(764824073),
-                        query: false,
-                    },
-                )
-                .in_current_span()
-                .await
-            }
-        }
+        handshake_n2n(
+            &mut self.0,
+            version,
+            handshake_n2n::HandshakeNodeData {
+                magic,
+                diffusion,
+                peer_sharing,
+                query: false,
+            },
+        )
+        .in_current_span()
+        .await
+    }
+}
+
+impl HandshakeN2CClient {
+    pub fn new(channel: AsyncChannel<handshake_n2c::State>) -> Self {
+        Self(channel)
+    }
+
+    #[tracing::instrument(skip(self), err)]
+    pub async fn handshake(
+        &mut self,
+        version: handshake_n2c::Version,
+        magic: handshake_n2c::Magic,
+    ) -> Result<(), Error> {
+        tracing::trace!("initialising handshake");
+        handshake_n2c(
+            &mut self.0,
+            version,
+            handshake_n2c::HandshakeNodeData {
+                magic,
+                query: false,
+            },
+        )
+        .in_current_span()
+        .await
     }
 }
 
