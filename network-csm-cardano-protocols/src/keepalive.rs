@@ -4,8 +4,10 @@ use network_csm_macro::NetworkCsmStateTransition;
 
 use alloc::format;
 
+use crate::protocol_numbers;
+
 impl Protocol for State {
-    const PROTOCOL_NUMBER: Id = Id::new(8);
+    const PROTOCOL_NUMBER: Id = protocol_numbers::KEEP_ALIVE;
     const MESSAGE_MAX_SIZE: usize = 64;
 
     type Message = Message;

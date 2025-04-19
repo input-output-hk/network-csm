@@ -1,7 +1,9 @@
 use network_csm::{Direction, Id, Protocol};
 
+use crate::protocol_numbers;
+
 impl Protocol for State {
-    const PROTOCOL_NUMBER: Id = Id::new(5);
+    const PROTOCOL_NUMBER: Id = protocol_numbers::CHAINSYNC_N2C;
     const MESSAGE_MAX_SIZE: usize = 8192;
 
     type Message = crate::chainsync_n2n::Message;

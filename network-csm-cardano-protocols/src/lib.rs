@@ -2,6 +2,8 @@
 
 extern crate alloc;
 
+pub mod protocol_numbers;
+
 pub mod blockfetch;
 pub mod chainsync_n2c;
 pub mod chainsync_n2n;

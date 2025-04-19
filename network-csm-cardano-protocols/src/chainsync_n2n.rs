@@ -6,8 +6,10 @@ use network_csm_macro::NetworkCsmStateTransition;
 
 use alloc::{format, vec::Vec};
 
+use crate::protocol_numbers;
+
 impl Protocol for State {
-    const PROTOCOL_NUMBER: Id = Id::new(2);
+    const PROTOCOL_NUMBER: Id = protocol_numbers::CHAINSYNC_N2N;
     const MESSAGE_MAX_SIZE: usize = 8192;
 
     type Message = Message;

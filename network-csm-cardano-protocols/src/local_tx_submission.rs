@@ -5,9 +5,10 @@ use network_csm_macro::NetworkCsmStateTransition;
 use alloc::format;
 
 pub use crate::chainsync_n2n::Point;
+use crate::protocol_numbers;
 
 impl Protocol for State {
-    const PROTOCOL_NUMBER: Id = Id::new(6);
+    const PROTOCOL_NUMBER: Id = protocol_numbers::LOCAL_TX_SUBMISSION;
     const MESSAGE_MAX_SIZE: usize = 8192;
 
     type Message = Message;

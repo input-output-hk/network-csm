@@ -5,6 +5,8 @@ use network_csm_macro::NetworkCsmStateTransition;
 
 use alloc::{format, string::String, vec::Vec};
 
+use crate::protocol_numbers;
+
 #[derive(Clone, Copy, Debug, Default)]
 pub enum State {
     #[default]
@@ -14,7 +16,7 @@ pub enum State {
 }
 
 impl Protocol for State {
-    const PROTOCOL_NUMBER: Id = Id::ZERO;
+    const PROTOCOL_NUMBER: Id = protocol_numbers::HANDSHAKE;
 
     const MESSAGE_MAX_SIZE: usize = 2048;
 

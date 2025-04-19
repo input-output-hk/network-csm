@@ -3,6 +3,8 @@ use cbored::CborRepr;
 use network_csm::{Direction, Id, Protocol};
 use network_csm_macro::NetworkCsmStateTransition;
 
+use crate::protocol_numbers;
+
 pub use super::handshake_n2n::Magic;
 pub use super::handshake_n2n::RefuseReason;
 
@@ -17,7 +19,7 @@ pub enum State {
 }
 
 impl Protocol for State {
-    const PROTOCOL_NUMBER: Id = Id::ZERO;
+    const PROTOCOL_NUMBER: Id = protocol_numbers::HANDSHAKE;
 
     const MESSAGE_MAX_SIZE: usize = 2048;
 

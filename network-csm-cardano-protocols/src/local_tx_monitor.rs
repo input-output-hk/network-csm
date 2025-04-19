@@ -4,10 +4,13 @@ use network_csm_macro::NetworkCsmStateTransition;
 
 use alloc::format;
 
-use crate::tx_submission::{Tx, TxId};
+use crate::{
+    protocol_numbers,
+    tx_submission::{Tx, TxId},
+};
 
 impl Protocol for State {
-    const PROTOCOL_NUMBER: Id = Id::new(9);
+    const PROTOCOL_NUMBER: Id = protocol_numbers::LOCAL_TX_MONITOR;
     const MESSAGE_MAX_SIZE: usize = 8192;
 
     type Message = Message;
