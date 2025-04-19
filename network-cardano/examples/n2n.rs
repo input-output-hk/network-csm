@@ -12,6 +12,10 @@ struct Arguments {
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
     let Arguments { address } = Arguments::parse();
 
     let mut builder = ClientBuilder::new();
@@ -39,11 +43,13 @@ async fn main() -> anyhow::Result<()> {
     };
     let end = tip.point;
 
+    let mut count = 0;
     match blockfetch.request_range(start, end).await? {
         Some(mut fetcher) => {
-            while let Some((data, next_fetcher)) = fetcher.next().await? {
-                println!("receive data");
+            while let Some((_data, next_fetcher)) = fetcher.next().await? {
+                println!("receive block data {}", count + 1);
                 fetcher = next_fetcher;
+                count += 1;
             }
         }
         None => (),

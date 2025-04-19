@@ -51,6 +51,7 @@ impl<'a> Blocks<'a> {
         match self.client.0.read_one().in_current_span().await? {
             blockfetch::Message::Block(cbor_block_data) => Ok(Some((cbor_block_data, self))),
             blockfetch::Message::BatchDone => Ok(None),
+            // invalid messages in this context
             blockfetch::Message::RequestRange(_, _)
             | blockfetch::Message::ClientDone
             | blockfetch::Message::StartBatch
