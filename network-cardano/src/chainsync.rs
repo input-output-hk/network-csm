@@ -1,5 +1,5 @@
 use network_csm_cardano_protocols::chainsync_n2c;
-use network_csm_cardano_protocols::chainsync_n2n::{self, Point, Points};
+use network_csm_cardano_protocols::chainsync_n2n::{self, CborChainsyncData, Point, Points};
 use network_csm_tokio::{AsyncChannel, MessageError};
 use tracing_futures::Instrument;
 
@@ -8,6 +8,12 @@ pub use chainsync_n2n::Tip;
 pub enum ChainSyncClient {
     N2N(AsyncChannel<chainsync_n2n::State>),
     N2C(AsyncChannel<chainsync_n2c::State>),
+}
+
+#[derive(Debug, Clone)]
+pub enum RequestNext {
+    Forward(CborChainsyncData, Tip),
+    Backward(Point, Tip),
 }
 
 impl ChainSyncClient {
@@ -57,6 +63,30 @@ impl ChainSyncClient {
         {
             chainsync_n2n::FindIntersectRet::IntersectionFound(_point, tip) => Ok(tip),
             chainsync_n2n::FindIntersectRet::IntersectionNotFound(tip) => Ok(tip),
+        }
+    }
+
+    #[tracing::instrument(skip(self), err)]
+    pub async fn request_next(
+        &mut self,
+    ) -> Result<RequestNext, MessageError<chainsync_n2n::State>> {
+        let msg = chainsync_n2n::Message::RequestNext;
+        self.write_one(msg).in_current_span().await;
+
+        loop {
+            match self
+                .read_one_match(chainsync_n2n::client_request_next_ret)
+                .in_current_span()
+                .await?
+            {
+                chainsync_n2n::RequestNextRet::AwaitReply => {}
+                chainsync_n2n::RequestNextRet::RollForward(cbor_chainsync_data, tip) => {
+                    return Ok(RequestNext::Forward(cbor_chainsync_data, tip));
+                }
+                chainsync_n2n::RequestNextRet::RollBackward(point, tip) => {
+                    return Ok(RequestNext::Backward(point, tip));
+                }
+            }
         }
     }
 }

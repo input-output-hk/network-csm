@@ -1,5 +1,5 @@
 use crate::{
-    ChainSyncClient,
+    BlockFetchClient, ChainSyncClient,
     handshake::{HandshakeN2CClient, HandshakeN2NClient},
 };
 use network_csm::DuplicateChannel;
@@ -33,6 +33,10 @@ impl ClientBuilder {
 
     pub fn with_n2c_chainsync(&mut self) -> Result<ChainSyncClient, DuplicateChannel> {
         self.channels.add_initiator().map(ChainSyncClient::new_n2n)
+    }
+
+    pub fn with_blockfetch(&mut self) -> Result<BlockFetchClient, DuplicateChannel> {
+        self.channels.add_initiator().map(BlockFetchClient::new)
     }
 
     pub(crate) async fn build_n2n<R, W>(
