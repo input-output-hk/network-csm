@@ -3,6 +3,7 @@ use crate::client::{
     common::{Client, ClientBuilder},
 };
 use futures::Sink;
+use network_csm_cardano_protocols::handshake_n2n;
 use reqwest_websocket::RequestBuilderExt as _;
 use std::{pin::Pin, task::ready};
 use thiserror::Error;
@@ -23,7 +24,12 @@ pub enum WsConnectError {
 impl ClientBuilder {
     /// connect to the given websocket
     ///
-    pub async fn ws_connect(self, path: String) -> Result<Client, ConnectionError> {
+    pub async fn ws_connect(
+        self,
+        path: String,
+        version: handshake_n2n::Version,
+        magic: handshake_n2n::Magic,
+    ) -> Result<Client, ConnectionError> {
         let response = reqwest::Client::default()
             .get(path)
             .upgrade() // Prepares the WebSocket upgrade.
@@ -38,7 +44,7 @@ impl ClientBuilder {
         // let stream = UnixStream::connect(path).await.unwrap();
         let (r, w) = tokio::io::split(websocket);
 
-        Self::build(self, r, w).await
+        Self::build_n2n(self, r, w, version, magic).await
     }
 }
 

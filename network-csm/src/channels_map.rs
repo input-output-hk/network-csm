@@ -34,6 +34,10 @@ impl<T> ChannelsMapBuilder<T> {
         }
     }
 
+    pub fn has(&self, channel_id: Id) -> bool {
+        self.map.contains_key(&channel_id)
+    }
+
     pub fn finalize(self) -> ChannelsMap<T> {
         if self.map.is_empty() {
             panic!("cannot finalize without any channel")

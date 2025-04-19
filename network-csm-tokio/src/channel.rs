@@ -255,6 +255,10 @@ impl HandleChannels {
         }
     }
 
+    pub fn has(&self, channel_id: Id) -> bool {
+        self.channels.has(channel_id)
+    }
+
     #[must_use]
     pub fn add<P>(
         &mut self,

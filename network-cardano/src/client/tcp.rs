@@ -2,6 +2,7 @@ use crate::client::{
     ConnectionError,
     common::{Client, ClientBuilder},
 };
+use network_csm_cardano_protocols::handshake_n2n;
 use std::net::SocketAddr;
 use tokio::net::TcpStream;
 
@@ -17,11 +18,16 @@ impl ClientBuilder {
     /// * [`peersharing`]
     /// * [`tx_submission`]
     ///
-    pub async fn tcp_connect(self, address: SocketAddr) -> Result<Client, ConnectionError> {
+    pub async fn tcp_connect(
+        self,
+        address: SocketAddr,
+        version: handshake_n2n::Version,
+        magic: handshake_n2n::Magic,
+    ) -> Result<Client, ConnectionError> {
         let stream = TcpStream::connect(address).await?;
 
         let (r, w) = stream.into_split();
 
-        Self::build(self, r, w).await
+        Self::build_n2n(self, r, w, version, magic).await
     }
 }

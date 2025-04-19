@@ -1,5 +1,9 @@
-use crate::{ChainSyncClient, handshake::HandshakeClient};
+use crate::{
+    ChainSyncClient,
+    handshake::{HandshakeN2CClient, HandshakeN2NClient},
+};
 use network_csm::DuplicateChannel;
+use network_csm_cardano_protocols::{handshake_n2c, handshake_n2n, protocol_numbers};
 use network_csm_tokio::{Handle, HandleChannels};
 use tokio::io::{AsyncRead, AsyncWrite};
 
@@ -10,8 +14,6 @@ use super::ConnectionError;
 ///
 pub struct ClientBuilder {
     channels: HandleChannels,
-    expect_n2n: bool,
-    expect_n2c: bool,
 }
 
 pub struct Client {
@@ -22,51 +24,65 @@ pub struct Client {
 impl ClientBuilder {
     pub fn new() -> Self {
         let channels = HandleChannels::new();
-        Self {
-            channels,
-            expect_n2n: false,
-            expect_n2c: false,
-        }
-    }
-
-    fn with_n2n_handshake(&mut self) -> Result<HandshakeClient, DuplicateChannel> {
-        self.channels.add_initiator().map(HandshakeClient::new_n2n)
-    }
-
-    fn with_n2c_handshake(&mut self) -> Result<HandshakeClient, DuplicateChannel> {
-        self.channels.add_initiator().map(HandshakeClient::new_n2c)
+        Self { channels }
     }
 
     pub fn with_n2n_chainsync(&mut self) -> Result<ChainSyncClient, DuplicateChannel> {
-        self.expect_n2n = true;
         self.channels.add_initiator().map(ChainSyncClient::new_n2n)
     }
 
     pub fn with_n2c_chainsync(&mut self) -> Result<ChainSyncClient, DuplicateChannel> {
-        self.expect_n2c = true;
         self.channels.add_initiator().map(ChainSyncClient::new_n2n)
     }
 
-    pub(crate) async fn build<R, W>(
+    pub(crate) async fn build_n2n<R, W>(
         mut self,
         read_stream: R,
         write_stream: W,
+        version: handshake_n2n::Version,
+        magic: handshake_n2n::Magic,
     ) -> Result<Client, ConnectionError>
     where
         R: AsyncRead + Unpin + Send + 'static,
         W: AsyncWrite + Unpin + Send + 'static,
     {
-        let mut handshake = match (self.expect_n2n, self.expect_n2c) {
-            (true, true) => return Err(ConnectionError::ProtocolConflict),
-            (false, false) => return Err(ConnectionError::ProtocolNotSpecified),
-            (true, false) => self.with_n2n_handshake().unwrap(),
-            (false, true) => self.with_n2c_handshake().unwrap(),
-        };
-
+        let has_peer_sharing = self.channels.has(protocol_numbers::PEER_SHARING);
+        let mut handshake = self
+            .channels
+            .add_initiator()
+            .map(HandshakeN2NClient::new)
+            .unwrap();
         let handle = Handle::create(read_stream, write_stream, self.channels);
+        let diffusion = handshake_n2n::DiffusionMode::InitiatorOnly;
+        let peer_sharing = if has_peer_sharing {
+            handshake_n2n::PeerSharing::Enabled
+        } else {
+            handshake_n2n::PeerSharing::Disabled
+        };
+        handshake
+            .handshake(version, magic, diffusion, peer_sharing)
+            .await?;
+        Ok(Client { handle })
+    }
 
-        handshake.handshake().await?;
-
+    pub(crate) async fn build_n2c<R, W>(
+        mut self,
+        read_stream: R,
+        write_stream: W,
+        version: handshake_n2c::Version,
+        magic: handshake_n2n::Magic,
+    ) -> Result<Client, ConnectionError>
+    where
+        R: AsyncRead + Unpin + Send + 'static,
+        W: AsyncWrite + Unpin + Send + 'static,
+    {
+        let mut handshake = self
+            .channels
+            .add_initiator()
+            .map(HandshakeN2CClient::new)
+            .unwrap();
+        let handle = Handle::create(read_stream, write_stream, self.channels);
+        handshake.handshake(version, magic).await?;
         Ok(Client { handle })
     }
 }
