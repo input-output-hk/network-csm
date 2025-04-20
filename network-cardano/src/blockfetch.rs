@@ -4,7 +4,7 @@ use tracing_futures::Instrument;
 
 pub struct BlockFetchClient(AsyncChannel<blockfetch::State>);
 
-pub struct Blocks<'a> {
+pub struct BlocksFetcher<'a> {
     client: &'a mut BlockFetchClient,
 }
 
@@ -30,7 +30,7 @@ impl BlockFetchClient {
         &'a mut self,
         start: blockfetch::Point,
         end: blockfetch::Point,
-    ) -> Result<Option<Blocks<'a>>, MessageError<blockfetch::State>> {
+    ) -> Result<Option<BlocksFetcher<'a>>, MessageError<blockfetch::State>> {
         let msg = blockfetch::Message::RequestRange(start, end);
         self.write_one(msg).in_current_span().await;
         match self
@@ -39,12 +39,12 @@ impl BlockFetchClient {
             .await?
         {
             blockfetch::RequestRangeRet::NoBlocks => Ok(None),
-            blockfetch::RequestRangeRet::StartBatch => Ok(Some(Blocks { client: self })),
+            blockfetch::RequestRangeRet::StartBatch => Ok(Some(BlocksFetcher { client: self })),
         }
     }
 }
 
-impl<'a> Blocks<'a> {
+impl<'a> BlocksFetcher<'a> {
     pub async fn next(
         self,
     ) -> Result<Option<(CborBlockData, Self)>, MessageError<blockfetch::State>> {
