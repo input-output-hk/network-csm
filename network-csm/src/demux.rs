@@ -30,10 +30,27 @@ impl Demux {
     }
 }
 
-#[derive(Debug)]
 pub enum DemuxState {
     Header([u8; HEADER_SIZE], u32),
     Content(Header, NonZeroUsize),
+}
+
+impl alloc::fmt::Debug for DemuxState {
+    fn fmt(&self, f: &mut alloc::fmt::Formatter<'_>) -> alloc::fmt::Result {
+        match self {
+            DemuxState::Header(_, left) => {
+                write!(f, "Waiting Header remaining={}", 8 - left)
+            }
+            DemuxState::Content(header, remaining) => {
+                write!(
+                    f,
+                    "Waiting Content {:?} remaining={}",
+                    header,
+                    remaining.get()
+                )
+            }
+        }
+    }
 }
 
 pub enum DemuxResult<'a> {
@@ -61,7 +78,7 @@ impl DemuxState {
         if data.is_empty() {
             return (0, DemuxResult::Continue);
         }
-        tracing::debug!("demux data={} current-state={:?}", data.len(), self);
+        tracing::trace!("demux data={} current-state={:?}", data.len(), self);
         match self {
             DemuxState::Header(buf, current_state) => {
                 let current = *current_state as usize;

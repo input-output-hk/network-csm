@@ -1,7 +1,7 @@
 //! connect to a cardano wallet extension in the browser
 //!
 
-use network_cardano::{ChainSyncClient, Client, ClientBuilder, Tip};
+use network_cardano::{ChainSyncClient, Client, ClientBuilder, Magic, Tip, VersionN2N};
 use yew::{platform::spawn_local, prelude::*};
 
 pub struct CardanoNetwork {
@@ -36,7 +36,10 @@ impl Component for CardanoNetwork {
         let chainsync = builder.with_n2n_chainsync().unwrap();
 
         spawn_local(async move {
-            match builder.ws_connect(url).await {
+            match builder
+                .ws_connect(url, VersionN2N::V14, Magic::CARDANO_MAINNET)
+                .await
+            {
                 Ok(handler) => link.send_message(CardanoNetworkMessage::Connected(handler)),
                 Err(error) => link.send_message(CardanoNetworkMessage::ConnectionFailed(format!(
                     "{error:#?}"
