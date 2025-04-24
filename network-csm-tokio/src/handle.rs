@@ -166,7 +166,7 @@ async fn demuxer_task<R: AsyncRead + Unpin>(
                     let mut buf = channel.raw_channel.buf_received();
                     let appended = buf.append(to_append);
                     if appended < to_append.len() {
-                        // apply back pressure
+                        // TODO apply back pressure
                         break 'outer Err(DemuxError::FullChannel(header.id(), header.direction()));
                     } else {
                         channel.r_notify.notify_waiters();
