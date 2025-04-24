@@ -119,6 +119,8 @@ pub enum DemuxError {
     IoError(#[source] Arc<std::io::Error>),
     #[error("Invalid channel {0:?} {1:?}")]
     InvalidChannel(Id, Direction),
+    #[error("Full channel {0:?} {1:?}")]
+    FullChannel(Id, Direction),
 }
 
 async fn demuxer_task<R: AsyncRead + Unpin>(
@@ -160,11 +162,17 @@ async fn demuxer_task<R: AsyncRead + Unpin>(
                     // it's guaranteed to be a valid channel here
                     let channel = channels.dispatch(header.id()).unwrap();
                     let channel = channel.get(!header.direction()).unwrap();
+
                     let mut buf = channel.raw_channel.buf_received();
-                    buf.append(to_append);
-                    channel.r_notify.notify_waiters();
-                    demux_notify.notify_waiters();
-                    data = &data[sz..];
+                    let appended = buf.append(to_append);
+                    if appended < to_append.len() {
+                        // apply back pressure
+                        break 'outer Err(DemuxError::FullChannel(header.id(), header.direction()));
+                    } else {
+                        channel.r_notify.notify_waiters();
+                        demux_notify.notify_waiters();
+                        data = &data[sz..];
+                    }
                 }
             }
         }

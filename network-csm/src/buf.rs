@@ -55,6 +55,7 @@ impl Buf {
     /// Append data to the buffer, returning the appended size which
     /// might be less than the requested data if the space available
     /// is smaller than the request.
+    #[must_use]
     pub fn append(&mut self, data: &[u8]) -> usize {
         let empty_space = self.empty_mut();
         if empty_space.len() < data.len() {
