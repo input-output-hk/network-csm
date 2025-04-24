@@ -22,8 +22,16 @@ impl ClientBuilder {
         magic: handshake_n2n::Magic,
     ) -> Result<Client, ConnectionError> {
         let stream = UnixStream::connect(path).await?;
-        let (r, w) = stream.into_split();
+        self.unix(stream, version, magic).await
+    }
 
+    pub async fn unix(
+        self,
+        stream: UnixStream,
+        version: handshake_n2c::Version,
+        magic: handshake_n2n::Magic,
+    ) -> Result<Client, ConnectionError> {
+        let (r, w) = stream.into_split();
         Self::build_n2c(self, r, w, version, magic).await
     }
 }

@@ -7,6 +7,10 @@ pub struct HandshakeN2NClient(AsyncChannel<handshake_n2n::State>);
 
 pub struct HandshakeN2CClient(AsyncChannel<handshake_n2c::State>);
 
+pub struct HandshakeN2NServer(AsyncChannel<handshake_n2n::State>);
+
+pub struct HandshakeN2CServer(AsyncChannel<handshake_n2c::State>);
+
 #[derive(Debug, Error)]
 pub enum Error {
     #[error("Invalid Handshake reply: {0:?}")]
@@ -18,6 +22,15 @@ pub enum Error {
     N2CHandshakeReplyError(MessageError<handshake_n2c::State>),
     #[error("Connection refused: {0:?}")]
     N2CConnectionRefused(handshake_n2c::RefuseReason),
+}
+
+#[derive(Debug, Error)]
+pub enum ServerError {
+    #[error("Invalid Handshake query: {0:?}")]
+    N2NHandshakeQueryError(MessageError<handshake_n2n::State>),
+
+    #[error("Invalid Handshake query: {0:?}")]
+    N2CHandshakeQueryError(MessageError<handshake_n2c::State>),
 }
 
 impl HandshakeN2NClient {
@@ -154,5 +167,53 @@ async fn handshake_n2c(
             // unsupported negotiation phase
             panic!("handshake query reply: {:?}", version_proposal)
         }
+    }
+}
+
+impl HandshakeN2NServer {
+    pub fn new(channel: AsyncChannel<handshake_n2n::State>) -> Self {
+        Self(channel)
+    }
+
+    #[tracing::instrument(skip(self, f), err)]
+    pub async fn handshake<F>(&mut self, f: F) -> Result<(), ServerError>
+    where
+        F: FnOnce(handshake_n2n::VersionProposal) -> handshake_n2n::ProposeVersionsRet,
+    {
+        tracing::trace!("initialising handshake");
+        let version_proposal = self
+            .0
+            .read_one_match(handshake_n2n::server_propose_message_filter)
+            .await
+            .map_err(ServerError::N2NHandshakeQueryError)?;
+
+        let ret = f(version_proposal);
+
+        self.0.write_one(handshake_n2n::Message::from(ret)).await;
+        Ok(())
+    }
+}
+
+impl HandshakeN2CServer {
+    pub fn new(channel: AsyncChannel<handshake_n2c::State>) -> Self {
+        Self(channel)
+    }
+
+    #[tracing::instrument(skip(self, f), err)]
+    pub async fn handshake<F>(&mut self, f: F) -> Result<(), ServerError>
+    where
+        F: FnOnce(handshake_n2c::VersionProposal) -> handshake_n2c::ProposeVersionsRet,
+    {
+        tracing::trace!("initialising handshake");
+        let version_proposal = self
+            .0
+            .read_one_match(handshake_n2c::server_propose_message_filter)
+            .await
+            .map_err(ServerError::N2CHandshakeQueryError)?;
+
+        let ret = f(version_proposal);
+
+        self.0.write_one(handshake_n2c::Message::from(ret)).await;
+        Ok(())
     }
 }

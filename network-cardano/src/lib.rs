@@ -2,6 +2,7 @@ mod blockfetch;
 mod chainsync;
 pub mod client;
 pub(crate) mod handshake;
+pub mod server;
 
 pub type VersionN2N = network_csm_cardano_protocols::handshake_n2n::Version;
 pub type VersionN2C = network_csm_cardano_protocols::handshake_n2c::Version;

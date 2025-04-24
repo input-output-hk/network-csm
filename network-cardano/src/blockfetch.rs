@@ -4,13 +4,15 @@ use tracing_futures::Instrument;
 
 pub struct BlockFetchClient(AsyncChannel<blockfetch::State>);
 
+pub struct BlockFetchServer(AsyncChannel<blockfetch::State>);
+
 pub struct BlocksFetcher<'a> {
     client: &'a mut BlockFetchClient,
 }
 
 impl BlockFetchClient {
     pub fn new(channel: AsyncChannel<blockfetch::State>) -> Self {
-        BlockFetchClient(channel)
+        Self(channel)
     }
 
     #[tracing::instrument(skip(self))]
@@ -59,5 +61,24 @@ impl<'a> BlocksFetcher<'a> {
                 panic!("invalid")
             }
         }
+    }
+}
+
+impl BlockFetchServer {
+    pub fn new(channel: AsyncChannel<blockfetch::State>) -> Self {
+        Self(channel)
+    }
+
+    #[tracing::instrument(skip(self))]
+    async fn write_one(&mut self, msg: blockfetch::Message) {
+        self.0.write_one(msg).in_current_span().await
+    }
+
+    #[tracing::instrument(skip(self, f))]
+    async fn read_one_match<F, T>(&mut self, f: F) -> Result<T, MessageError<blockfetch::State>>
+    where
+        F: FnOnce(blockfetch::Message) -> Option<T>,
+    {
+        self.0.read_one_match(f).await
     }
 }

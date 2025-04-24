@@ -25,9 +25,16 @@ impl ClientBuilder {
         magic: handshake_n2n::Magic,
     ) -> Result<Client, ConnectionError> {
         let stream = TcpStream::connect(address).await?;
+        self.tcp(stream, version, magic).await
+    }
 
+    pub async fn tcp(
+        self,
+        stream: TcpStream,
+        version: handshake_n2n::Version,
+        magic: handshake_n2n::Magic,
+    ) -> Result<Client, ConnectionError> {
         let (r, w) = stream.into_split();
-
         Self::build_n2n(self, r, w, version, magic).await
     }
 }
