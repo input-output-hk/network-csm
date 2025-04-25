@@ -81,4 +81,32 @@ impl BlockFetchServer {
     {
         self.0.read_one_match(f).await
     }
+
+    // TODO in-progress API
+    pub async fn idle<F, Fut, R>(
+        &mut self,
+        f: F,
+    ) -> Result<Option<R>, MessageError<blockfetch::State>>
+    where
+        F: FnOnce(blockfetch::Point, blockfetch::Point) -> Fut,
+        Fut: Future<Output = Option<R>>,
+    {
+        match self
+            .0
+            .read_one_match(blockfetch::server_idle_message_filter)
+            .await?
+        {
+            blockfetch::OnIdleMsg::RequestRange(point_start, point_end) => {
+                let r = f(point_start, point_end).await;
+                let reply_msg = if r.is_some() {
+                    blockfetch::Message::StartBatch
+                } else {
+                    blockfetch::Message::NoBlocks
+                };
+                self.0.write_one(reply_msg).await;
+                Ok(r)
+            }
+            blockfetch::OnIdleMsg::ClientDone => Ok(None),
+        }
+    }
 }
