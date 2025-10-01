@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>WS peer stream test</title>
+  <style>
+    body { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; padding: 1rem; }
+    #log { white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+  <h1>WebSocket test</h1>
+  <pre id="log"></pre>
+
+  <script>
+    const logEl = document.getElementById('log');
+    const log = (m) => { logEl.textContent += m + "\n"; };
+
+    const ws = new WebSocket("ws://localhost:8080/ws"); // keep "ws://" not "wss://"
+
+    ws.onopen    = () => log("connected");
+    ws.onmessage = (e) => log(e.data);
+    ws.onerror   = (e) => log("error: " + (e.message || JSON.stringify(e)));
+    ws.onclose   = () => log("closed");
+  </script>
+</body>
+</html>
