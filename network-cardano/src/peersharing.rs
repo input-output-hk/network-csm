@@ -17,12 +17,13 @@ impl PeerSharingClient {
 
     /// Send one ShareRequest and wait briefly for a reply.
     /// Returns unique peers as `SocketAddr`s.
-    pub async fn request_once(&mut self) -> Result<Vec<SocketAddr>> {
-        self.0.write_one(Message::ShareRequest(5)).await;
+    pub async fn request_once(&mut self, count: u16) -> Result<Vec<SocketAddr>> {
+        self.0.write_one(Message::ShareRequest(count as u8)).await;
 
-        let msg = timeout(Duration::from_secs(5), self.0.read_one())
+        let msg = self
+            .0
+            .read_one()
             .await
-            .map_err(|_| anyhow!("PeerSharing timed out (no reply)"))?
             .map_err(|e| anyhow!("PeerSharing read error: {e:?}"))?;
 
         let peers_raw = match msg {
