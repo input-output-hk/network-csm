@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use std::collections::HashSet;
+use std::error::Error;
 use std::net::SocketAddr;
 use std::time::Instant;
 use tokio::time::{Duration, sleep};
@@ -26,7 +27,7 @@ struct Args {
 }
 
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> Result<(), Box<dyn Error>> {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer())
@@ -44,7 +45,7 @@ async fn main() -> Result<()> {
         std::process::exit(2);
     }
 
-    info!("🌐 PeerSharing (client-only, enhanced)");
+    info!("PeerSharing (client-only, enhanced)");
     info!("Seeds: {:?}", seeds);
 
     let mut unique: HashSet<SocketAddr> = HashSet::new();
@@ -58,7 +59,7 @@ async fn main() -> Result<()> {
             let diffusion_mode = DiffusionMode::InitiatorAndResponder;
             let peer_sharing = PeerSharing::Enabled;
 
-            // ⏱️ Measure RTT
+            // ⏱ Measure RTT
             let start = Instant::now();
             let connect_result = builder
                 .tcp_connect(addr, VersionN2N::V14, HandshakeMagic(1))
@@ -68,7 +69,7 @@ async fn main() -> Result<()> {
             match connect_result {
                 Ok(_) => {
                     println!(
-                        "\n🌍 {addr}\n  RTT: {rtt} ms\n  Mode: {diffusion_mode:?}\n  PeerSharing: {peer_sharing:?}"
+                        "\n {addr}\n  RTT: {rtt} ms\n  Mode: {diffusion_mode:?}\n  PeerSharing: {peer_sharing:?}"
                     );
 
                     match request_once_with_timeout(
@@ -97,7 +98,8 @@ async fn main() -> Result<()> {
         }
     }
 
-    eprintln!("\n== Summary ==\nunique peers: {}", unique.len());
+    info!("== Summary == unique peers: {}", unique.len());
+
     Ok(())
 }
 
@@ -105,11 +107,18 @@ async fn request_once_with_timeout(
     ps: &mut PeerSharingClient,
     count: u16,
     timeout: Duration,
-) -> Result<Vec<SocketAddr>> {
+) -> Result<Vec<SocketAddr>, std::io::Error> {
     use tokio::time::timeout as to;
-    Ok(to(timeout, ps.request_once(count))
+
+    Ok(to(timeout, ps.request_once(count as u8))
         .await
-        .map_err(|_| anyhow::anyhow!("PeerSharing timed out (no reply)"))??)
+        .map_err(|_| std::io::Error::new(std::io::ErrorKind::TimedOut, "PeerSharing timed out"))?
+        .map_err(|e| {
+            std::io::Error::new(
+                std::io::ErrorKind::Other,
+                format!("PeerSharing failed: {e:?}"),
+            )
+        })?)
 }
 
 async fn resolve(s: &str) -> Vec<SocketAddr> {

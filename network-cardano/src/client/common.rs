@@ -41,13 +41,9 @@ impl ClientBuilder {
         self.channels.add_initiator().map(BlockFetchClient::new)
     }
 
-   pub fn with_peersharing(&mut self) -> std::result::Result<PeerSharingClient, DuplicateChannel> {
+    pub fn with_peersharing(&mut self) -> std::result::Result<PeerSharingClient, DuplicateChannel> {
         self.channels.add_initiator().map(PeerSharingClient::new)
     }
-
-     
-    
-
 
     pub(crate) async fn build_n2n<R, W>(
         mut self,
