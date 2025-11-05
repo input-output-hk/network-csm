@@ -55,3 +55,28 @@ pub enum Peer {
     IPV4(u32, u16),
     IPV6(u32, u32, u32, u32, u16),
 }
+use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
+
+impl Peer {
+    pub fn to_socketaddr(&self) -> SocketAddr {
+        match *self {
+            Peer::IPV4(bits, port) => {
+                let ip = Ipv4Addr::from(bits);
+                SocketAddr::new(IpAddr::V4(ip), port)
+            }
+            Peer::IPV6(w0, w1, w2, w3, port) => {
+                let parts = [
+                    (w0 >> 16) as u16, (w0 & 0xFFFF) as u16,
+                    (w1 >> 16) as u16, (w1 & 0xFFFF) as u16,
+                    (w2 >> 16) as u16, (w2 & 0xFFFF) as u16,
+                    (w3 >> 16) as u16, (w3 & 0xFFFF) as u16,
+                ];
+                let ip = Ipv6Addr::new(
+                    parts[0], parts[1], parts[2], parts[3],
+                    parts[4], parts[5], parts[6], parts[7],
+                );
+                SocketAddr::new(IpAddr::V6(ip), port)
+            }
+        }
+    }
+}
