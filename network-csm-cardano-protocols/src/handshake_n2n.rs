@@ -207,6 +207,7 @@ pub struct Magic(pub u64);
 
 impl Magic {
     pub const CARDANO_MAINNET: Self = Magic(764824073);
+    pub const CARDANO_DEVNET: Self = Self(1);
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
