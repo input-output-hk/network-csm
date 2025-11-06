@@ -1,9 +1,9 @@
 use network_csm_cardano_protocols::chainsync_n2c;
-use network_csm_cardano_protocols::chainsync_n2n::{self, CborChainsyncData, Point, Points};
+use network_csm_cardano_protocols::chainsync_n2n::{self, CborChainsyncData};
 use network_csm_tokio::{AsyncChannel, MessageError};
 use tracing_futures::Instrument;
 
-pub use chainsync_n2n::Tip;
+pub use chainsync_n2n::{Point, Points, Tip};
 
 pub enum ChainSyncClient {
     N2N(AsyncChannel<chainsync_n2n::State>),
