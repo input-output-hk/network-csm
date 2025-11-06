@@ -117,7 +117,7 @@ pub struct AsyncChannel<P: Protocol> {
 
 #[derive(Clone, thiserror::Error, Debug)]
 pub enum MessageError<P: Protocol> {
-    #[error("Invalid content")]
+    #[error("Invalid content: `{0}'")]
     InvalidContent(#[source] ReadMessageError),
     #[error("Invalid state")]
     InvalidState { current: P, msg: P::Message },
@@ -125,6 +125,9 @@ pub enum MessageError<P: Protocol> {
     StreamTerminated,
     #[error("Internal error")]
     InternalError,
+    /// error used when a message is larger than the buffer capacity
+    #[error("Message oversized")]
+    Oversized,
 }
 
 impl<P: Protocol> MessageError<P> {
@@ -145,6 +148,7 @@ impl<P: Protocol> MessageError<P> {
             }
             MessageError::StreamTerminated => MessageError::StreamTerminated,
             MessageError::InternalError => MessageError::InternalError,
+            MessageError::Oversized => MessageError::Oversized,
         }
     }
 }
