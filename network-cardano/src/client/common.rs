@@ -32,7 +32,7 @@ impl ClientBuilder {
     }
 
     pub fn with_n2c_chainsync(&mut self) -> Result<ChainSyncClient, DuplicateChannel> {
-        self.channels.add_initiator().map(ChainSyncClient::new_n2n)
+        self.channels.add_initiator().map(ChainSyncClient::new_n2c)
     }
 
     pub fn with_blockfetch(&mut self) -> Result<BlockFetchClient, DuplicateChannel> {
