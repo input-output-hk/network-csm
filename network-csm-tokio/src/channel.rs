@@ -90,12 +90,20 @@ impl AsyncRawChannel {
     async fn read_one<P: Protocol>(&mut self) -> Result<P::Message, MessageError<P>> {
         loop {
             match self.raw_channel.pop_message() {
-                Some(m) => return m.map_err(|e| e.into()),
+                Some(m) => {
+                    // we need to notify back the Handle that we have decoded
+                    // a message successfully in case there is data remaining
+                    // on the buffer
+                    //
+                    return m.map_err(|e| e.into());
+                }
                 None => {
                     if self.terminated.load(Ordering::SeqCst) == true {
                         return Err(MessageError::StreamTerminated);
                     }
-                    self.r_notify.notified().await
+                    // waiting for more bytes to appear
+                    self.r_notify.notified().await;
+                    tokio::time::sleep(std::time::Duration::from_millis(200)).await;
                 }
             }
         }

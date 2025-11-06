@@ -1,6 +1,7 @@
 use cbored::CborRepr;
 use network_csm::{Direction, Id, Protocol};
 use network_csm_macro::NetworkCsmStateTransition;
+use std::fmt;
 
 use alloc::{format, vec::Vec};
 
@@ -57,8 +58,16 @@ pub enum Message {
     BatchDone,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CborBlockData(pub Vec<u8>);
+
+impl fmt::Debug for CborBlockData {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_tuple("CborBlockData")
+            .field(&hex::encode(&self.0))
+            .finish()
+    }
+}
 
 impl cbored::Decode for CborBlockData {
     fn decode<'a>(reader: &mut cbored::Reader<'a>) -> Result<Self, cbored::DecodeError> {
