@@ -10,7 +10,7 @@ use crate::protocol_numbers;
 
 impl Protocol for State {
     const PROTOCOL_NUMBER: Id = protocol_numbers::BLOCKFETCH;
-    const MESSAGE_MAX_SIZE: usize = 131072;
+    const MESSAGE_MAX_SIZE: usize = 2_500 * 1_024;
 
     type Message = Message;
 
