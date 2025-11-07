@@ -68,10 +68,27 @@ pub enum Message {
     SyncDone,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Point {
     Origin,
     BlockHeader { slot_nb: u64, hash: [u8; 32] },
+}
+
+impl fmt::Debug for Point {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut ds = f.debug_tuple("Point");
+        match self {
+            Point::Origin => {
+                ds.field(&"Origin");
+            }
+            Point::BlockHeader { slot_nb, hash } => {
+                ds.field(slot_nb);
+                ds.field(&hex::encode(hash));
+            }
+        }
+
+        ds.finish()
+    }
 }
 
 impl fmt::Display for Point {

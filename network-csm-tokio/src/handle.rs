@@ -158,25 +158,50 @@ async fn demuxer_task<R: AsyncRead + Unpin>(
                     }
                     data = &data[sz..];
                 }
-                DemuxResult::DataAppend(header, _finished, to_append) => {
+                DemuxResult::DataAppend(header, _finished, mut to_append) => {
                     // it's guaranteed to be a valid channel here
                     let channel = channels.dispatch(header.id()).unwrap();
                     let channel = channel.get(!header.direction()).unwrap();
 
-                    let mut buf = channel.raw_channel.buf_received();
-                    let appended = buf.append(to_append);
-                    if appended < to_append.len() {
-                        // TODO apply back pressure
-                        break 'outer Err(DemuxError::FullChannel(header.id(), header.direction()));
-                    } else {
+                    while !to_append.is_empty() {
+                        // > 0
+                        let Some(appended) = channel.raw_channel.push_bytes(to_append) else {
+                            break 'outer Err(DemuxError::FullChannel(
+                                header.id(),
+                                header.direction(),
+                            ));
+                        };
                         channel.r_notify.notify_waiters();
-                        demux_notify.notify_waiters();
-                        data = &data[sz..];
+
+                        // check if there are remaining bytes to write
+                        to_append = &to_append[appended..];
+                        if !to_append.is_empty() {
+                            // buffer is full at this point. we need to wait for the consumer
+                            // do something with the buffer.
+                            //
+                            // if the buffer doesn't contain a valid CBOR message that can
+                            // be consumed, then the sender is not sending us any valid message
+                            // and the consumer should drop the connection with prejudice!
+
+                            // 1. wait for consumption to happen
+                            while channel.raw_channel.buf_received().empty_is_empty() {
+                                tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+                            }
+                        }
                     }
+
+                    data = &data[sz..];
+                    demux_notify.notify_waiters();
                 }
             }
         }
     };
+
+    if let Err(error) = r.as_ref() {
+        eprintln!("Error: {error}");
+        eprintln!("Error: {error:#?}");
+    }
+
     for (_id, chan) in channels.iterate() {
         match chan {
             OnDirection::Initiator(chan) => chan.terminate(),

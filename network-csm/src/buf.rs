@@ -35,16 +35,28 @@ impl Buf {
         }
     }
 
+    pub fn maximum_capacity(&self) -> usize {
+        self.buf.len()
+    }
+
+    pub fn empty_is_empty(&self) -> bool {
+        self.empty().is_empty()
+    }
+
     pub fn len(&self) -> usize {
         self.pos
+    }
+
+    pub fn empty(&self) -> &[u8] {
+        &self.buf[self.pos..]
     }
 
     pub fn empty_mut(&mut self) -> &mut [u8] {
         &mut self.buf[self.pos..]
     }
 
-    pub fn empty_remaining(&self) -> usize {
-        self.buf.len() - self.pos
+    pub fn empty_len(&self) -> usize {
+        self.empty().len()
     }
 
     /// Return the data that can be consumed
@@ -58,9 +70,11 @@ impl Buf {
     #[must_use]
     pub fn append(&mut self, data: &[u8]) -> usize {
         let empty_space = self.empty_mut();
+        let empty_space_len = empty_space.len();
         if empty_space.len() < data.len() {
             empty_space.copy_from_slice(&data[0..empty_space.len()]);
-            empty_space.len()
+            self.pos += empty_space_len;
+            empty_space_len
         } else {
             empty_space[0..data.len()].copy_from_slice(data);
             self.pos += data.len();
