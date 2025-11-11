@@ -1,6 +1,6 @@
-use network_csm_tokio::MessageError;
 use network_csm_cardano_protocols::peer_sharing::{Message, Peer, State};
 use network_csm_tokio::AsyncChannel;
+use network_csm_tokio::MessageError;
 use std::collections::HashSet;
 use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use tracing::{debug, warn};
