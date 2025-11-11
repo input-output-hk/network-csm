@@ -14,35 +14,46 @@ use network_csm_cardano_protocols::handshake_n2n::{
 };
 
 #[derive(Parser, Debug)]
-#[command(author, version, about)]
+#[command(
+    author,
+    version,
+    about = "Query peers via the PeerSharing mini-protocol to discover connected nodes."
+)]
 struct Args {
-    #[arg(value_delimiter = ' ')]
+    #[arg(
+        default_value = "3.248.5.22:3001",
+        env = "BOOTSTRAP1",
+        help = "Peer addresses to query (repeat --seeds for multiple, e.g. --seeds a:3001 --seeds b:3001)"
+    )]
     seeds: Vec<String>,
 
-    #[arg(long, default_value_t = 8)]
+    #[arg(
+        long,
+        default_value_t = 8,
+        help = "Timeout (seconds) to wait for a PeerSharing reply"
+    )]
     reply_timeout_secs: u64,
 
-    #[arg(long, default_value_t = 5)]
-    count: u16,
+    #[arg(
+        long,
+        default_value_t = 5,
+        help = "Maximum number of peers to request from each seed"
+    )]
+    count: u8,
 }
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn Error>> {
+async fn main() -> anyhow::Result<()> {
     tracing_subscriber::registry()
         .with(tracing_subscriber::EnvFilter::from_default_env())
         .with(tracing_subscriber::fmt::layer())
         .init();
 
     let args = Args::parse();
-    let seeds = if args.seeds.is_empty() {
-        load_bootstraps_from_env()
-    } else {
-        args.seeds
-    };
+    let seeds = args.seeds;
 
     if seeds.is_empty() {
-        eprintln!("No seeds provided. Pass them on the CLI OR set BOOTSTRAP1/2/3 env vars.");
-        std::process::exit(2);
+        anyhow::bail!("No seeds provided. Pass via CLI or set BOOTSTRAP1 env var.");
     }
 
     info!("PeerSharing (client-only, enhanced)");
@@ -105,12 +116,12 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
 async fn request_once_with_timeout(
     ps: &mut PeerSharingClient,
-    count: u16,
+    count: u8,
     timeout: Duration,
-) -> Result<Vec<SocketAddr>, std::io::Error> {
+) -> std::result::Result<Vec<SocketAddr>, std::io::Error> {
     use tokio::time::timeout as to;
 
-    Ok(to(timeout, ps.request_once(count as u8))
+    Ok(to(timeout, ps.request_once(count))
         .await
         .map_err(|_| std::io::Error::new(std::io::ErrorKind::TimedOut, "PeerSharing timed out"))?
         .map_err(|e| {
@@ -134,24 +145,4 @@ async fn resolve(s: &str) -> Vec<SocketAddr> {
     }
     warn!("DNS resolution failed for {s}");
     vec![]
-}
-
-fn load_bootstraps_from_env() -> Vec<String> {
-    let mut v = Vec::new();
-    if let Ok(s) = std::env::var("BOOTSTRAP1") {
-        if !s.is_empty() {
-            v.push(s);
-        }
-    }
-    if let Ok(s) = std::env::var("BOOTSTRAP2") {
-        if !s.is_empty() {
-            v.push(s);
-        }
-    }
-    if let Ok(s) = std::env::var("BOOTSTRAP3") {
-        if !s.is_empty() {
-            v.push(s);
-        }
-    }
-    v
 }
