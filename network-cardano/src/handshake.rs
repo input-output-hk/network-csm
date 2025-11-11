@@ -110,6 +110,7 @@ async fn handshake_n2n(
         .write_one(handshake_n2n::Message::ProposeVersions(versions_proposal))
         .in_current_span()
         .await;
+    tracing::trace!("waiting server's reply");
     let msg = channel
         .read_one_match(handshake_n2n::client_propose_versions_ret)
         .in_current_span()
