@@ -1,7 +1,5 @@
-use anyhow::Result;
 use clap::Parser;
 use std::collections::HashSet;
-use std::error::Error;
 use std::net::SocketAddr;
 use std::time::Instant;
 use tokio::time::{Duration, sleep};
@@ -22,8 +20,8 @@ use network_csm_cardano_protocols::handshake_n2n::{
 struct Args {
     #[arg(
         default_value = "3.248.5.22:3001",
-        env = "BOOTSTRAP1",
-        help = "Peer addresses to query (repeat --seeds for multiple, e.g. --seeds a:3001 --seeds b:3001)"
+        env = "BOOTSTRAP_SEED",
+        help = "List of peer addresses to query (space-separated or via BOOTSTRAP_SEED env var)"
     )]
     seeds: Vec<String>,
 
@@ -53,7 +51,7 @@ async fn main() -> anyhow::Result<()> {
     let seeds = args.seeds;
 
     if seeds.is_empty() {
-        anyhow::bail!("No seeds provided. Pass via CLI or set BOOTSTRAP1 env var.");
+        anyhow::bail!("No seeds provided. Pass via CLI or set BOOTSTRAP_SEED env var.");
     }
 
     info!("PeerSharing (client-only, enhanced)");
@@ -104,7 +102,7 @@ async fn main() -> anyhow::Result<()> {
                 }
                 Err(e) => warn!("{addr} connection failed: {e:?}"),
             }
-
+            // Small delay to avoid hammering relays too fast
             sleep(Duration::from_millis(200)).await;
         }
     }
