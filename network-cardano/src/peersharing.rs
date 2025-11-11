@@ -1,10 +1,9 @@
-use network_csm_cardano_protocols::peer_sharing::{Message, Peer, State};
-use network_csm_tokio::AsyncChannel;
 use network_csm_tokio::MessageError;
+use network_csm_tokio::AsyncChannel;
 use std::collections::HashSet;
-use std::net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr};
 use tracing::{debug, warn};
-
+use network_csm_cardano_protocols::peer_sharing::{Message, State};
+use std::net::SocketAddr;
 /// Client wrapper for the PeerSharing mini-protocol (initiator side).
 pub struct PeerSharingClient(AsyncChannel<State>);
 
@@ -14,7 +13,7 @@ impl PeerSharingClient {
     }
 
     /// Send one ShareRequest and wait briefly for a reply.
-    /// Returns unique peers as SocketAddrs.
+    /// Returns unique peers as `SocketAddr`s.
     pub async fn request_once(
         &mut self,
         count: u8,
