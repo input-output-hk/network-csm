@@ -1,9 +1,9 @@
-use network_csm_tokio::MessageError;
-use network_csm_tokio::AsyncChannel;
-use std::collections::HashSet;
-use tracing::{debug, warn};
 use network_csm_cardano_protocols::peer_sharing::{Message, State};
+use network_csm_tokio::AsyncChannel;
+use network_csm_tokio::MessageError;
+use std::collections::HashSet;
 use std::net::SocketAddr;
+use tracing::{debug, warn};
 /// Client wrapper for the PeerSharing mini-protocol (initiator side).
 pub struct PeerSharingClient(AsyncChannel<State>);
 
