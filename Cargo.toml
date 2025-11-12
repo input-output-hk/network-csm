@@ -9,4 +9,5 @@ members = [
     "network-csm-example",
     "network-cardano",
     "network-csm-cardano-ws-proxy",
+    "webapp",
 ]
