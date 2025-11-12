@@ -1,7 +1,9 @@
 use crate::{
     BlockFetchClient, ChainSyncClient,
     handshake::{HandshakeN2CClient, HandshakeN2NClient},
+    peersharing::PeerSharingClient,
 };
+
 use network_csm::DuplicateChannel;
 use network_csm_cardano_protocols::{handshake_n2c, handshake_n2n, protocol_numbers};
 use network_csm_tokio::{Handle, HandleChannels};
@@ -37,6 +39,10 @@ impl ClientBuilder {
 
     pub fn with_blockfetch(&mut self) -> Result<BlockFetchClient, DuplicateChannel> {
         self.channels.add_initiator().map(BlockFetchClient::new)
+    }
+
+    pub fn with_peersharing(&mut self) -> std::result::Result<PeerSharingClient, DuplicateChannel> {
+        self.channels.add_initiator().map(PeerSharingClient::new)
     }
 
     pub(crate) async fn build_n2n<R, W>(

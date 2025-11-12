@@ -116,7 +116,7 @@ impl Component for CardanoNetwork {
 
         let tip = if let Some(tip) = self.tip.as_ref() {
             let Tip {
-                point: _,
+                point,
                 block_number,
             } = tip;
             html! {
